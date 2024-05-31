@@ -18,7 +18,8 @@ pub mod solana_lock_nft {
 
     pub fn initializestatepda(
         ctx: Context<Initialisedstatepda>,
-        _bump: u8,
+        bump_state: u8,
+        bump_token: u8,
         admin: Pubkey,
         beneficiary: Pubkey,
     ) -> Result<()> {
@@ -26,6 +27,8 @@ pub mod solana_lock_nft {
         ctx.accounts.statepda.admin = admin;
         ctx.accounts.statepda.lock = 1;
         ctx.accounts.statepda.beneficiary = beneficiary;
+        ctx.accounts.statepda.bump_state = bump_state;
+        ctx.accounts.statepda.bump_token = bump_token;
         Ok(())
     }
 
@@ -46,18 +49,18 @@ pub mod solana_lock_nft {
         Ok(())
     }
 
-    pub fn sendtokenwinner(ctx: Context<SendTokenWinner>, _bump1: u8, _amount: u64) -> Result<()> {
+    pub fn sendtokenwinner(ctx: Context<SendTokenWinner>, _amount: u64) -> Result<()> {
         msg!("token transfer to winner started from backend...");
 
         if ctx.accounts.statepda.lock == 1 {
             panic!("sc is locked!")
         }
 
-        let bump_vector = _bump1.to_le_bytes();
+        let bump_vector = &ctx.accounts.statepda.bump_state.to_le_bytes();
         let dep = &mut ctx.accounts.beneficiary.key();
-        let sender = &ctx.accounts.sender;
+        let sender = &ctx.accounts.statepda.admin;
         let inner = vec![
-            sender.key.as_ref(),
+            sender.as_ref(),
             dep.as_ref(),
             "state".as_ref(),
             bump_vector.as_ref(),
@@ -89,7 +92,8 @@ pub struct Initialize {}
 #[account]
 #[derive(Default)]
 pub struct State {
-    bump: u8,
+    bump_state: u8,
+    bump_token: u8,
     amount: u64,
     lock: u8,
     admin: Pubkey,
@@ -97,7 +101,6 @@ pub struct State {
 }
 
 #[derive(Accounts)]
-#[instruction(_bump : u8)]
 pub struct Initialisedstatepda<'info> {
     #[account(
         init,
@@ -115,7 +118,6 @@ pub struct Initialisedstatepda<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(_bump : u8)]
 pub struct Initialisetokenpda<'info> {
     #[account(
         init,

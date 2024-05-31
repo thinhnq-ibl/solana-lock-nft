@@ -116,11 +116,19 @@ describe("solana-lock-nft", () => {
         programId
       );
 
+    /// token PDA
+    const [usertokenpda, bump_token] =
+      await anchor.web3.PublicKey.findProgramAddress(
+        [User_Wallet.publicKey.toBuffer(), beneficiaryAta.address.toBuffer()],
+        programId
+      );
+
     if ((await con.getAccountInfo(user_pda_state)) == null) {
       transaction.add(
         await program.methods
           .initializestatepda(
             bump_state,
+            bump_token,
             User_Wallet.publicKey,
             beneficiaryAta.address
           )
@@ -138,13 +146,6 @@ describe("solana-lock-nft", () => {
     await sendAndConfirmTransaction(con, transaction, [User_Wallet]);
 
     let transaction1 = new anchor.web3.Transaction();
-
-    /// token PDA
-    const [usertokenpda, bump_token] =
-      await anchor.web3.PublicKey.findProgramAddress(
-        [User_Wallet.publicKey.toBuffer(), beneficiaryAta.address.toBuffer()],
-        programId
-      );
 
     if ((await con.getAccountInfo(usertokenpda)) == null) {
       transaction1.add(
@@ -221,7 +222,7 @@ describe("solana-lock-nft", () => {
 
     transaction4.add(
       await program.methods
-        .sendtokenwinner(bump1, new anchor.BN(amount))
+        .sendtokenwinner(new anchor.BN(amount))
         .accounts({
           tokenpda: usertokenpda2,
           statepda: user_pda_state2,
