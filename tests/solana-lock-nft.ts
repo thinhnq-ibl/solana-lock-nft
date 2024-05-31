@@ -111,7 +111,7 @@ describe("solana-lock-nft", () => {
     if ((await con.getAccountInfo(user_pda_state)) == null) {
       transaction.add(
         await program.methods
-          .initializestatepda(bump_state)
+          .initializestatepda(bump_state, User_Wallet.publicKey)
           .accounts({
             statepda: user_pda_state,
             owner: User_Wallet.publicKey,
@@ -179,6 +179,22 @@ describe("solana-lock-nft", () => {
 
     let transaction3 = new anchor.web3.Transaction();
 
+    /// call for token transfer from user to PDA token Account
+    transaction3.add(
+      await program.methods
+        .unlock()
+        .accounts({
+          statepda: user_pda_state,
+          owner: User_Wallet.publicKey,
+        })
+        .signers([User_Wallet])
+        .instruction()
+    );
+
+    await sendAndConfirmTransaction(con, transaction3, [User_Wallet]);
+
+    let transaction4 = new anchor.web3.Transaction();
+
     const [user_pda_state2, bump1] =
       await anchor.web3.PublicKey.findProgramAddress(
         [
@@ -206,7 +222,7 @@ describe("solana-lock-nft", () => {
       winner_wallet.publicKey
     );
 
-    transaction3.add(
+    transaction4.add(
       await program.methods
         .sendtokenwinner(bump1, bump2, new anchor.BN(amount))
         .accounts({
@@ -225,6 +241,6 @@ describe("solana-lock-nft", () => {
         .instruction()
     );
 
-    await sendAndConfirmTransaction(con, transaction3, [winner_wallet]);
+    await sendAndConfirmTransaction(con, transaction4, [winner_wallet]);
   });
 });

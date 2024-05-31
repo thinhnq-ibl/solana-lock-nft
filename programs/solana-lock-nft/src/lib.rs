@@ -16,9 +16,14 @@ pub mod solana_lock_nft {
         Ok(())
     }
 
-    pub fn initializestatepda(_ctx: Context<Initialisedstatepda>, _bump: u8) -> Result<()> {
+    pub fn initializestatepda(
+        ctx: Context<Initialisedstatepda>,
+        _bump: u8,
+        admin: Pubkey,
+    ) -> Result<()> {
         msg!("state got Initialised");
-
+        ctx.accounts.statepda.admin = admin;
+        ctx.accounts.statepda.lock = 1;
         Ok(())
     }
 
@@ -26,6 +31,16 @@ pub mod solana_lock_nft {
         msg!("token got Initialised");
         let pda = ctx.accounts.tokenpda.key();
         msg!("token pda : {}", pda);
+        Ok(())
+    }
+
+    pub fn unlock(ctx: Context<Unlockstatepda>) -> Result<()> {
+        msg!("token got Initialised");
+        if ctx.accounts.statepda.admin == ctx.accounts.owner.key() {
+            ctx.accounts.statepda.lock = 0;
+        } else {
+            panic!("not admin !")
+        }
         Ok(())
     }
 
@@ -89,6 +104,10 @@ pub mod solana_lock_nft {
     ) -> Result<()> {
         msg!("token transfer to winner started from backend...");
 
+        if ctx.accounts.statepda.lock == 1 {
+            panic!("sc is locked!")
+        }
+
         let bump_vector = _bump1.to_le_bytes();
         let dep = &mut ctx.accounts.deposit_token_account.key();
         let sender = &ctx.accounts.sender;
@@ -127,6 +146,8 @@ pub struct Initialize {}
 pub struct State {
     bump: u8,
     amount: u64,
+    lock: u8,
+    admin: Pubkey,
 }
 
 #[derive(Accounts)]
@@ -168,6 +189,13 @@ pub struct Initialisetokenpda<'info> {
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
     pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
+pub struct Unlockstatepda<'info> {
+    #[account(mut)]
+    pub statepda: Account<'info, State>,
+    pub owner: Signer<'info>,
 }
 
 #[derive(Accounts)]
