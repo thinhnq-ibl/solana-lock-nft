@@ -7,6 +7,7 @@ import {
   createAssociatedTokenAccount,
   mintTo,
   TOKEN_PROGRAM_ID,
+  createTransferInstruction,
 } from "@solana/spl-token";
 import { assert, expect } from "chai";
 
@@ -97,12 +98,19 @@ describe("solana-lock-nft", () => {
     );
     let amount = 1;
 
+    let wallet_to_deposit_to = await getOrCreateAssociatedTokenAccount(
+      con,
+      winner_wallet,
+      myToken_acctA.mint,
+      winner_wallet.publicKey
+    );
+
     // state PDA for token
     const [user_pda_state, bump_state] =
       await anchor.web3.PublicKey.findProgramAddress(
         [
           User_Wallet.publicKey.toBuffer(),
-          myToken_acctA.address.toBuffer(),
+          wallet_to_deposit_to.address.toBuffer(),
           Buffer.from("state"),
         ],
         programId
@@ -111,11 +119,15 @@ describe("solana-lock-nft", () => {
     if ((await con.getAccountInfo(user_pda_state)) == null) {
       transaction.add(
         await program.methods
-          .initializestatepda(bump_state, User_Wallet.publicKey)
+          .initializestatepda(
+            bump_state,
+            User_Wallet.publicKey,
+            wallet_to_deposit_to.address
+          )
           .accounts({
             statepda: user_pda_state,
             owner: User_Wallet.publicKey,
-            depositTokenAccount: myToken_acctA.address,
+            beneficiary: wallet_to_deposit_to.address,
             systemProgram: anchor.web3.SystemProgram.programId,
           })
           .signers([User_Wallet])
@@ -130,7 +142,10 @@ describe("solana-lock-nft", () => {
     /// token PDA
     const [usertokenpda, bump_token] =
       await anchor.web3.PublicKey.findProgramAddress(
-        [User_Wallet.publicKey.toBuffer(), myToken_acctA.address.toBuffer()],
+        [
+          User_Wallet.publicKey.toBuffer(),
+          wallet_to_deposit_to.address.toBuffer(),
+        ],
         programId
       );
 
@@ -143,7 +158,7 @@ describe("solana-lock-nft", () => {
             statepda: user_pda_state,
             mint: mintA,
             owner: User_Wallet.publicKey,
-            depositTokenAccount: myToken_acctA.address,
+            beneficiary: wallet_to_deposit_to.address,
             systemProgram: anchor.web3.SystemProgram.programId,
             rent: SYSVAR_RENT_PUBKEY,
             tokenProgram: TOKEN_PROGRAM_ID,
@@ -159,20 +174,12 @@ describe("solana-lock-nft", () => {
 
     /// call for token transfer from user to PDA token Account
     transaction2.add(
-      await program.methods
-        .sendtokenpda(bump_state, bump_token, new anchor.BN(amount))
-        .accounts({
-          tokenpda: usertokenpda,
-          statepda: user_pda_state,
-          mint: mintA,
-          owner: User_Wallet.publicKey,
-          depositTokenAccount: myToken_acctA.address,
-          systemProgram: anchor.web3.SystemProgram.programId,
-          rent: SYSVAR_RENT_PUBKEY,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        })
-        .signers([User_Wallet])
-        .instruction()
+      await createTransferInstruction(
+        myToken_acctA.address,
+        usertokenpda,
+        User_Wallet.publicKey,
+        amount
+      )
     );
 
     await sendAndConfirmTransaction(con, transaction2, [User_Wallet]);
@@ -199,7 +206,7 @@ describe("solana-lock-nft", () => {
       await anchor.web3.PublicKey.findProgramAddress(
         [
           User_Wallet.publicKey.toBuffer(),
-          myToken_acctA.address.toBuffer(),
+          wallet_to_deposit_to.address.toBuffer(),
           Buffer.from("state"),
         ],
         programId
@@ -207,7 +214,10 @@ describe("solana-lock-nft", () => {
 
     const [usertokenpda2, bump2] =
       await anchor.web3.PublicKey.findProgramAddress(
-        [User_Wallet.publicKey.toBuffer(), myToken_acctA.address.toBuffer()],
+        [
+          User_Wallet.publicKey.toBuffer(),
+          wallet_to_deposit_to.address.toBuffer(),
+        ],
         programId
       );
 
@@ -215,22 +225,15 @@ describe("solana-lock-nft", () => {
       console.log("token  pda does not exist");
     }
 
-    let wallet_to_deposit_to = await getOrCreateAssociatedTokenAccount(
-      con,
-      winner_wallet,
-      myToken_acctA.mint,
-      winner_wallet.publicKey
-    );
-
     transaction4.add(
       await program.methods
-        .sendtokenwinner(bump1, bump2, new anchor.BN(amount))
+        .sendtokenwinner(bump1, new anchor.BN(amount))
         .accounts({
           tokenpda: usertokenpda2,
           statepda: user_pda_state2,
           walletToDepositTo: wallet_to_deposit_to.address,
           sender: User_Wallet.publicKey,
-          depositTokenAccount: myToken_acctA.address,
+          beneficiary: wallet_to_deposit_to.address,
           reciever: winner_wallet.publicKey,
           systemProgram: anchor.web3.SystemProgram.programId,
           rent: SYSVAR_RENT_PUBKEY,
