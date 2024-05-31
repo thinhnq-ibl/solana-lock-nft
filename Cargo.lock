@@ -1000,13 +1000,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lock-nft"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
-]
-
-[[package]]
 name = "lock_api"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1511,6 +1504,13 @@ dependencies = [
  "quote",
  "rustc_version",
  "syn 2.0.66",
+]
+
+[[package]]
+name = "solana-lock-nft"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
 ]
 
 [[package]]

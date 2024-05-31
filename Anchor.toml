@@ -5,7 +5,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-lock_nft = "ALMY4h8se9Q33wouHCWw61rByF8n5YftFoGuwDtYBenG"
+solana_lock_nft = "HdeXbQhJHqPGJ8gW5fG2cn9713T3BL5s4HN4ReYqWtem"
 
 [registry]
 url = "https://api.apr.dev"
