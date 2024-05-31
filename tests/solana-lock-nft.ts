@@ -98,7 +98,7 @@ describe("solana-lock-nft", () => {
     );
     let amount = 1;
 
-    let wallet_to_deposit_to = await getOrCreateAssociatedTokenAccount(
+    let beneficiaryAta = await getOrCreateAssociatedTokenAccount(
       con,
       winner_wallet,
       myToken_acctA.mint,
@@ -110,7 +110,7 @@ describe("solana-lock-nft", () => {
       await anchor.web3.PublicKey.findProgramAddress(
         [
           User_Wallet.publicKey.toBuffer(),
-          wallet_to_deposit_to.address.toBuffer(),
+          beneficiaryAta.address.toBuffer(),
           Buffer.from("state"),
         ],
         programId
@@ -122,12 +122,12 @@ describe("solana-lock-nft", () => {
           .initializestatepda(
             bump_state,
             User_Wallet.publicKey,
-            wallet_to_deposit_to.address
+            beneficiaryAta.address
           )
           .accounts({
             statepda: user_pda_state,
             owner: User_Wallet.publicKey,
-            beneficiary: wallet_to_deposit_to.address,
+            beneficiary: beneficiaryAta.address,
             systemProgram: anchor.web3.SystemProgram.programId,
           })
           .signers([User_Wallet])
@@ -142,10 +142,7 @@ describe("solana-lock-nft", () => {
     /// token PDA
     const [usertokenpda, bump_token] =
       await anchor.web3.PublicKey.findProgramAddress(
-        [
-          User_Wallet.publicKey.toBuffer(),
-          wallet_to_deposit_to.address.toBuffer(),
-        ],
+        [User_Wallet.publicKey.toBuffer(), beneficiaryAta.address.toBuffer()],
         programId
       );
 
@@ -158,7 +155,7 @@ describe("solana-lock-nft", () => {
             statepda: user_pda_state,
             mint: mintA,
             owner: User_Wallet.publicKey,
-            beneficiary: wallet_to_deposit_to.address,
+            beneficiary: beneficiaryAta.address,
             systemProgram: anchor.web3.SystemProgram.programId,
             rent: SYSVAR_RENT_PUBKEY,
             tokenProgram: TOKEN_PROGRAM_ID,
@@ -206,7 +203,7 @@ describe("solana-lock-nft", () => {
       await anchor.web3.PublicKey.findProgramAddress(
         [
           User_Wallet.publicKey.toBuffer(),
-          wallet_to_deposit_to.address.toBuffer(),
+          beneficiaryAta.address.toBuffer(),
           Buffer.from("state"),
         ],
         programId
@@ -214,10 +211,7 @@ describe("solana-lock-nft", () => {
 
     const [usertokenpda2, bump2] =
       await anchor.web3.PublicKey.findProgramAddress(
-        [
-          User_Wallet.publicKey.toBuffer(),
-          wallet_to_deposit_to.address.toBuffer(),
-        ],
+        [User_Wallet.publicKey.toBuffer(), beneficiaryAta.address.toBuffer()],
         programId
       );
 
@@ -231,9 +225,8 @@ describe("solana-lock-nft", () => {
         .accounts({
           tokenpda: usertokenpda2,
           statepda: user_pda_state2,
-          walletToDepositTo: wallet_to_deposit_to.address,
           sender: User_Wallet.publicKey,
-          beneficiary: wallet_to_deposit_to.address,
+          beneficiary: beneficiaryAta.address,
           reciever: winner_wallet.publicKey,
           systemProgram: anchor.web3.SystemProgram.programId,
           rent: SYSVAR_RENT_PUBKEY,

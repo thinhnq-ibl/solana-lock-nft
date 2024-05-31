@@ -65,7 +65,7 @@ pub mod solana_lock_nft {
         let outer = vec![inner.as_slice()];
         let transfer_instruction = Transfer {
             from: ctx.accounts.tokenpda.to_account_info(),
-            to: ctx.accounts.wallet_to_deposit_to.to_account_info(),
+            to: ctx.accounts.beneficiary.to_account_info(),
             authority: ctx.accounts.statepda.to_account_info(),
         };
 
@@ -150,10 +150,9 @@ pub struct SendTokenWinner<'info> {
     pub tokenpda: Account<'info, TokenAccount>,
     pub statepda: Account<'info, State>,
     #[account(mut)]
-    pub wallet_to_deposit_to: Account<'info, TokenAccount>,
+    pub beneficiary: Account<'info, TokenAccount>,
     /// CHECK not read write to this account
     pub sender: AccountInfo<'info>,
-    pub beneficiary: Account<'info, TokenAccount>,
     #[account(mut)]
     /// CHECK not read write to this account
     pub reciever: Signer<'info>,
