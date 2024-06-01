@@ -32,7 +32,7 @@ pub mod solana_lock_nft {
         Ok(())
     }
 
-    pub fn initialisetokenpda(ctx: Context<Initialisetokenpda>, _bump1: u8) -> Result<()> {
+    pub fn initialisetokenpda(ctx: Context<Initialisetokenpda>) -> Result<()> {
         msg!("token got Initialised");
         let pda = ctx.accounts.tokenpda.key();
         msg!("token pda : {}", pda);
@@ -153,11 +153,6 @@ pub struct SendTokenWinner<'info> {
     pub statepda: Account<'info, State>,
     #[account(mut)]
     pub beneficiary: Account<'info, TokenAccount>,
-    /// CHECK not read write to this account
-    pub sender: AccountInfo<'info>,
-    #[account(mut)]
-    /// CHECK not read write to this account
-    pub reciever: Signer<'info>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
     pub associated_token_program: Program<'info, AssociatedToken>,
