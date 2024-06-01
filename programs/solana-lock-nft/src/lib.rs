@@ -49,7 +49,7 @@ pub mod solana_lock_nft {
         Ok(())
     }
 
-    pub fn sendtokenwinner(ctx: Context<SendTokenWinner>, _amount: u64) -> Result<()> {
+    pub fn claimtoken(ctx: Context<ClaimToken>, _amount: u64) -> Result<()> {
         msg!("token transfer to winner started from backend...");
 
         if ctx.accounts.statepda.lock == 1 {
@@ -147,7 +147,7 @@ pub struct Unlockstatepda<'info> {
 }
 
 #[derive(Accounts)]
-pub struct SendTokenWinner<'info> {
+pub struct ClaimToken<'info> {
     #[account(mut)]
     pub tokenpda: Account<'info, TokenAccount>,
     pub statepda: Account<'info, State>,

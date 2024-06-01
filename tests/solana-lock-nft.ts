@@ -207,7 +207,7 @@ describe("solana-lock-nft", () => {
 
     transaction4.add(
       await program.methods
-        .sendtokenwinner(new anchor.BN(amount))
+        .claimtoken(new anchor.BN(amount))
         .accounts({
           tokenpda: usertokenpda2,
           statepda: user_pda_state2,
