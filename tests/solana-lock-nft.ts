@@ -36,9 +36,9 @@ let accountPrivKey3 = [
   137, 202, 241, 32, 173, 112, 53, 38, 54, 162, 60, 247, 196, 20, 12, 110, 170,
   242, 244, 167, 83, 110, 255, 131, 29, 55, 183, 201, 214, 68, 218, 186, 57, 35,
   15, 188, 234, 46, 215, 78, 161, 229, 205, 222, 5, 133, 123,
-];
+].slice(0, 32);
 let user2_wallet = anchor.web3.Keypair.fromSeed(
-  Uint8Array.from(accountPrivKey2)
+  Uint8Array.from(accountPrivKey3)
 );
 
 describe("solana-lock-nft", () => {
