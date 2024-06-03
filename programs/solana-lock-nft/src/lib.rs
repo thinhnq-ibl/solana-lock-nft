@@ -84,6 +84,40 @@ pub mod solana_lock_nft {
 
         Ok(())
     }
+
+    pub fn cancel(ctx: Context<Cancel>) -> Result<()> {
+        if ctx.accounts.statepda.admin != ctx.accounts.signer.key() {
+            panic!("it's not admin")
+        }
+
+        let bump_vector = &ctx.accounts.statepda.bump_state.to_le_bytes();
+        let dep = &mut ctx.accounts.beneficiary.key();
+        let sender = &ctx.accounts.statepda.admin;
+        let inner = vec![
+            sender.as_ref(),
+            dep.as_ref(),
+            "state".as_ref(),
+            bump_vector.as_ref(),
+        ];
+        let outer = vec![inner.as_slice()];
+        let transfer_instruction = Transfer {
+            from: ctx.accounts.tokenpda.to_account_info(),
+            to: ctx.accounts.receiver.to_account_info(),
+            authority: ctx.accounts.statepda.to_account_info(),
+        };
+
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            transfer_instruction,
+            outer.as_slice(),
+        );
+
+        msg!("trasnfer call start");
+
+        anchor_spl::token::transfer(cpi_ctx, ctx.accounts.statepda.amount)?;
+
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -134,6 +168,8 @@ pub struct Initialisetokenpda<'info> {
     pub owner: Signer<'info>,
     #[account(mut)]
     pub beneficiary: Account<'info, TokenAccount>,
+    #[account(mut)]
+    pub admin: Account<'info, TokenAccount>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
     pub token_program: Program<'info, Token>,
@@ -153,6 +189,23 @@ pub struct ClaimToken<'info> {
     pub statepda: Account<'info, State>,
     #[account(mut)]
     pub beneficiary: Account<'info, TokenAccount>,
+    pub system_program: Program<'info, System>,
+    pub rent: Sysvar<'info, Rent>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
+pub struct Cancel<'info> {
+    #[account(mut)]
+    pub tokenpda: Account<'info, TokenAccount>,
+    pub statepda: Account<'info, State>,
+    #[account(mut)]
+    pub beneficiary: Account<'info, TokenAccount>,
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    #[account(mut)]
+    pub receiver: Account<'info, TokenAccount>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
     pub associated_token_program: Program<'info, AssociatedToken>,
